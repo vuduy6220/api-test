@@ -11,6 +11,8 @@ const router = express.Router();
  *     responses:
  *       200:
  *         description: Success
+ *       400
+ *         description: Bad request
  */
 router.get('/test', (req, res) => {
   res.send('test');
