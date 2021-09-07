@@ -18,6 +18,6 @@ const options = {
 
 const swaggerSpec = swaggerJSDoc(options);
 
-export const initSwagger = async (app: Application): Promise<any> => {
+export const initSwagger = (app: Application) => {
   app.use('/api-docs', swaggerUI.serve, swaggerUI.setup(swaggerSpec));
 };
