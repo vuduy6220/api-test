@@ -27,7 +27,6 @@ const initServer = async () => {
   /** Takes care of JSON data */
   router.use(express.json());
 
-
   // await connectDB();
   initSwagger(app);
   initRoute(app);

@@ -1,9 +1,10 @@
 import { Application, NextFunction, Request, Response } from 'express';
 import { Schema } from 'joi';
-import { BaseErrors, errorHandler, notFoundHandler } from './response-handler';
+import { BaseErrors, errorHandler, notFoundHandler, responseSuccess } from './response-handler';
 import { HttpMethod } from 'src/commons/constants';
 import { logger } from 'src/helpers/default.logger';
 import { authRoute } from '../api/v1/auth/auth.route';
+import { signToken, verifyToken } from 'src/helper/authenticate';
 
 interface Validate {
   headers?: Schema,
@@ -13,7 +14,11 @@ interface Validate {
 };
 
 interface FunctionHandler {
-  (req: Request, res: Response): void;
+  (req: Request): Promise<any> | any;
+}
+
+interface FunctionValidation {
+  (req: Request): Promise<any>
 }
 
 export interface Route {
@@ -24,7 +29,10 @@ export interface Route {
     validate?: Validate,
     auth?: boolean,
     // role
-  }
+  },
+  plugins?: {
+    requestValidation?: FunctionValidation,
+  },
 };
 
 const _routesV1 = [
@@ -67,20 +75,52 @@ const _handleValidate = (validate?: Validate) => {
   };
 };
 
+const _authenticate = (auth: boolean = true) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!auth) return next();
+    try {
+      verifyToken(req);
+      next()
+    } catch (error) {
+      // logger.error(error);
+      next(new BaseErrors('unauthorized', 401, 'Unauthorized'));
+    }
+  }
+};
+
+const _requestValidation = (func?: FunctionValidation) => {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (!func) return next();
+    func(req)
+      .then(() => next())
+      .catch(error => {
+        logger.error(error);
+        throw error;
+      });
+  };
+};
+
 const _handleFunction = (func: FunctionHandler) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      func(req, res);
+      const data = await func(req);
+      responseSuccess(res, data);
     } catch (error) {
       logger.error(error);
       next(error);
     }
   };
-}
+};
 
 export const initRoute = (app: Application) => {
   _routesV1.forEach((route: Route) => {
-    app[route.method](`/v1/${route.path}`, _handleValidate(route.config?.validate), _handleFunction(route.handler));
+    app[route.method](
+      `/v1/${route.path}`,
+      _handleValidate(route.config?.validate),
+      _authenticate(route.config?.auth),
+      _requestValidation(route.plugins?.requestValidation),
+      _handleFunction(route.handler),
+    );
   });
   app.use(notFoundHandler);
   app.use(errorHandler);

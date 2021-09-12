@@ -9,6 +9,7 @@ export const authRoute: Route[] = [
     path: 'user',
     handler: authController.getAuth,
     config: {
+      // auth: false,
       validate: {
         headers: Joi.object({
           authorization: Joi.string().required()

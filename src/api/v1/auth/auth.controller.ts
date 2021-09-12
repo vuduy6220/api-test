@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { responseSuccess } from 'src/config/response-handler';
 
-const getAuth = (req: Request, res: Response) => {
-  return responseSuccess(res, { test: true });
+const getAuth = (req: Request) => {
+  return { test: true }
 };
 
 export default {

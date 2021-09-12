@@ -11,11 +11,9 @@ export const notFoundHandler = (req: Request, res: Response, next: NextFunction)
 };
 
 export const errorHandler = (error: any, req: Request, res: Response, next: NextFunction) => {
-  console.log(error);
-
   const code = error.code ? error.code : 'server_error';
   const statusCode = error.statusCode ? error.statusCode : 500;
-  const messages = error.messages ? error.messages : 'internal server error';
+  const messages = error.messages ? error.messages : 'Internal server error';
   return res.status(statusCode).json({
     code,
     statusCode,
@@ -35,7 +33,7 @@ export class BaseErrors extends Error {
   code: string;
   statusCode: number;
   messages: any;
-  constructor(code = 'server_error', status = 500, message = 'internal server error') {
+  constructor(code = 'server_error', status = 500, message = 'Internal server error') {
     super();
     this.code = code;
     this.statusCode = status;
